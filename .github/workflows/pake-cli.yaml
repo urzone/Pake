@@ -98,7 +98,7 @@ jobs:
         timeout-minutes: 25
         shell: bash
         run: |
-          ARGS="${{ inputs.url }} --name ${{ inputs.name }}"
+          ARGS="${{ inputs.url }} --name ${{ inputs.name }} --user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'"
 
           if [ -n "${{ inputs.icon }}" ]; then
             ARGS="$ARGS --icon ${{ inputs.icon }}"
