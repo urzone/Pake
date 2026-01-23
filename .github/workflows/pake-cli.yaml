@@ -52,6 +52,10 @@ on:
         description: "Package formats (comma-separated: deb,appimage,rpm)"
         required: false
         default: "deb"
+      user_agent:
+        description: "Custom User Agent string"
+        required: false
+        default: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
 
 jobs:
   build:
@@ -98,7 +102,11 @@ jobs:
         timeout-minutes: 25
         shell: bash
         run: |
-          ARGS="${{ inputs.url }} --name ${{ inputs.name }} --user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'"
+          ARGS="${{ inputs.url }} --name ${{ inputs.name }}"
+
+          if [ -n "${{ inputs.user_agent }}" ]; then
+            ARGS="$ARGS --user-agent '${{ inputs.user_agent }}'"
+          fi
 
           if [ -n "${{ inputs.icon }}" ]; then
             ARGS="$ARGS --icon ${{ inputs.icon }}"
@@ -129,25 +137,33 @@ jobs:
           fi
 
           echo "Running: node dist/cli.js $ARGS"
-          node dist/cli.js $ARGS
+          eval node dist/cli.js $ARGS
 
       - name: Build App (Windows)
         if: runner.os == 'Windows'
         timeout-minutes: 25
         shell: pwsh
         run: |
-          $args = "${{ inputs.url }}", "--name", "${{ inputs.name }}"
+          $args = @("${{ inputs.url }}", "--name", "${{ inputs.name }}")
+
+          if ("${{ inputs.user_agent }}" -ne "") {
+            $args += "--user-agent"
+            $args += "${{ inputs.user_agent }}"
+          }
 
           if ("${{ inputs.icon }}" -ne "") {
-            $args += "--icon", "${{ inputs.icon }}"
+            $args += "--icon"
+            $args += "${{ inputs.icon }}"
           }
 
           if ("${{ inputs.width }}" -ne "") {
-            $args += "--width", "${{ inputs.width }}"
+            $args += "--width"
+            $args += "${{ inputs.width }}"
           }
 
           if ("${{ inputs.height }}" -ne "") {
-            $args += "--height", "${{ inputs.height }}"
+            $args += "--height"
+            $args += "${{ inputs.height }}"
           }
 
           if ("${{ inputs.fullscreen }}" -eq "true") {
@@ -159,7 +175,7 @@ jobs:
           }
 
           Write-Host "Running: node dist/cli.js $($args -join ' ')"
-          node dist/cli.js $args
+          & node dist/cli.js @args
 
           git checkout -- src-tauri/Cargo.lock
 
