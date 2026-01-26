@@ -95,9 +95,10 @@ pub fn run_app() {
                 app.app_handle(),
                 show_system_tray,
                 &pake_config.system_tray_path,
+                init_fullscreen,
             )
             .unwrap();
-            set_global_shortcut(app.app_handle(), activation_shortcut).unwrap();
+            set_global_shortcut(app.app_handle(), activation_shortcut, init_fullscreen).unwrap();
 
             // Show window after state restoration to prevent position flashing
             // Unless start_to_tray is enabled, then keep it hidden
@@ -156,16 +157,16 @@ pub fn run_app() {
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|app, event| {
+        .run(|_app, _event| {
             // Handle macOS dock icon click to reopen hidden window
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Reopen {
                 has_visible_windows,
                 ..
-            } = event
+            } = _event
             {
                 if !has_visible_windows {
-                    if let Some(window) = app.get_webview_window("pake") {
+                    if let Some(window) = _app.get_webview_window("pake") {
                         let _ = window.show();
                         let _ = window.set_focus();
                     }
